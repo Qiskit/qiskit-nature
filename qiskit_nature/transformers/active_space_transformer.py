@@ -276,7 +276,8 @@ class ActiveSpaceTransformer(BaseTransformer):
 
         return (active_orbs_idxs, inactive_orbs_idxs)
 
-    def _validate_num_electrons(self, nelec_inactive: int):
+    @staticmethod
+    def _validate_num_electrons(nelec_inactive: int):
         """Validates the number of electrons.
 
         Args:

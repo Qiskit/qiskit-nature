@@ -22,7 +22,6 @@ from qiskit.opflow.primitive_ops import Z2Symmetries
 
 from qiskit_nature.circuit.library.initial_states.hartree_fock import hartree_fock_bitstring
 from qiskit_nature.drivers import FermionicDriver, QMolecule
-from qiskit_nature.operators.second_quantization import SecondQuantizedOp
 from qiskit_nature.converters.second_quantization import QubitConverter
 from qiskit_nature.results import EigenstateResult, ElectronicStructureResult
 from qiskit_nature.transformers import BaseTransformer
@@ -32,6 +31,7 @@ from .builders.fermionic_op_builder import _build_fermionic_op
 from .builders.hopping_ops_builder import _build_qeom_hopping_ops
 from .result_interpreter import _interpret
 from ..base_problem import BaseProblem
+from ..problem_second_quantized_ops import ProblemSecondQuantizedOps
 
 
 class ElectronicStructureProblem(BaseProblem):
@@ -52,7 +52,7 @@ class ElectronicStructureProblem(BaseProblem):
         molecule_data_transformed = cast(QMolecule, self._molecule_data_transformed)
         return molecule_data_transformed.num_alpha, molecule_data_transformed.num_beta
 
-    def second_q_ops(self) -> List[SecondQuantizedOp]:
+    def second_q_ops(self) -> ProblemSecondQuantizedOps:
         """Returns a list of `SecondQuantizedOp` created based on a driver and transformations
         provided.
 
@@ -65,10 +65,12 @@ class ElectronicStructureProblem(BaseProblem):
         self._molecule_data_transformed = cast(QMolecule, self._transform(self._molecule_data))
 
         electronic_fermionic_op = _build_fermionic_op(self._molecule_data_transformed)
-        second_quantized_ops_list = [electronic_fermionic_op] + _create_all_aux_operators(
-            self._molecule_data_transformed)
+        aux_second_quantized_ops_list = _create_all_aux_operators(self._molecule_data_transformed)
 
-        return second_quantized_ops_list
+        problem_second_quantized_ops = ProblemSecondQuantizedOps(electronic_fermionic_op,
+                                                                 aux_second_quantized_ops_list)
+
+        return problem_second_quantized_ops
 
     def hopping_qeom_ops(self, qubit_converter: QubitConverter,
                          excitations: Union[str, int, List[int],

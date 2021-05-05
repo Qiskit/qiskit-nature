@@ -20,7 +20,6 @@ from qiskit.algorithms import EigensolverResult, MinimumEigensolverResult
 from qiskit.opflow import PauliSumOp
 
 from qiskit_nature.drivers import BosonicDriver, WatsonHamiltonian
-from qiskit_nature.operators.second_quantization import SecondQuantizedOp
 from qiskit_nature.converters.second_quantization import QubitConverter
 from qiskit_nature.results import EigenstateResult, VibrationalStructureResult
 from qiskit_nature.transformers import BaseTransformer
@@ -30,6 +29,7 @@ from .builders.vibrational_op_builder import _build_vibrational_op
 from .builders.aux_vibrational_ops_builder import _create_all_aux_operators
 from .result_interpreter import _interpret
 from ..base_problem import BaseProblem
+from ..problem_second_quantized_ops import ProblemSecondQuantizedOps
 
 
 class VibrationalStructureProblem(BaseProblem):
@@ -48,7 +48,7 @@ class VibrationalStructureProblem(BaseProblem):
         self.num_modals = num_modals
         self.truncation_order = truncation_order
 
-    def second_q_ops(self) -> List[SecondQuantizedOp]:
+    def second_q_ops(self) -> ProblemSecondQuantizedOps:
         """Returns a list of `SecondQuantizedOp` created based on a driver and transformations
         provided.
 
@@ -69,9 +69,12 @@ class VibrationalStructureProblem(BaseProblem):
         else:
             num_modals = self.num_modals
 
-        second_quantized_ops_list = [vibrational_spin_op] + _create_all_aux_operators(num_modals)
+        aux_second_quantized_ops_list = _create_all_aux_operators(num_modals)
 
-        return second_quantized_ops_list
+        problem_second_quantized_ops = ProblemSecondQuantizedOps(vibrational_spin_op,
+                                                                 aux_second_quantized_ops_list)
+
+        return problem_second_quantized_ops
 
     def hopping_qeom_ops(self, qubit_converter: QubitConverter,
                          excitations: Union[str, int, List[int],
